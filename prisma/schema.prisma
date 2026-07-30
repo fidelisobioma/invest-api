@@ -20,5 +20,43 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  deposits Deposit[]
   @@map("users")
+}
+
+model AdminWallet {
+  id        String  @id @default(cuid())
+  coin      String
+  network   String
+  address   String
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deposits  Deposit[]
+  @@map("admin_wallets")
+  @@unique([coin, network])
+}
+
+enum DepositStatus{
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+model Deposit {
+  id            String @id @default(cuid())
+  userId        String
+  user          User @relation(fields: [userId], references: [id])
+  adminWalletId String
+  adminWallet   AdminWallet @relation(fields: [adminWalletId], references: [id])
+  txHash        String
+  amount        Decimal
+  status        DepositStatus @default(PENDING)
+  reviewedAt    DateTime
+  reviewNote  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([txHash, adminWalletId])
+  @@map("deposits")
 }
