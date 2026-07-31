@@ -1,8 +1,17 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware.ts";
-import { validateQuery } from "../../middleware/validate.middleware.ts";
-import { depositAddressQuerySchema } from "./deposits.types.ts";
-import { getDepositAddressHandler } from "./deposits.controller.ts";
+import {
+  validate,
+  validateQuery,
+} from "../../middleware/validate.middleware.ts";
+import {
+  depositAddressQuerySchema,
+  createDepositSchema,
+} from "./deposits.types.ts";
+import {
+  getDepositAddressHandler,
+  createDepositHandler,
+} from "./deposits.controller.ts";
 
 const router = Router();
 
@@ -11,6 +20,13 @@ router.get(
   requireAuth,
   validateQuery(depositAddressQuerySchema),
   getDepositAddressHandler,
+);
+
+router.post(
+  "/",
+  requireAuth,
+  validate(createDepositSchema),
+  createDepositHandler,
 );
 
 export default router;
