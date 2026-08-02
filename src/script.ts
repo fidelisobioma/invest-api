@@ -19,6 +19,21 @@ async function main() {
 
   console.log("User ready:", user.email);
 
+  const adminPassword = await bcrypt.hash("admin12345", SALT_ROUNDS);
+
+  const admin = await prisma.user.upsert({
+    where: { email: "mbamfidelisobioma1@gmail.com" },
+    update: {},
+    create: {
+      email: "mbamfidelisobioma1@gmail.com",
+      password: adminPassword,
+      name: "Vault Admin",
+      role: "ADMIN",
+    },
+  });
+
+  console.log("Admin ready:", admin.email);
+
   // --- Seed admin wallets (idempotent: upsert by coin+network) ---
   const adminWallets = [
     {

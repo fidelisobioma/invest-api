@@ -12,6 +12,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id        String   @id   @default(cuid())
   email     String   @unique
@@ -20,6 +25,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  role Role @default(USER) 
   deposits Deposit[]
   @@map("users")
 }

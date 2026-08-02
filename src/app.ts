@@ -6,6 +6,7 @@ import express, {
 const app: Application = express();
 import authRoutes from "./modules/auth/auth.routes.ts";
 import depositsRoutes from "./modules/deposits/deposits.routes.ts";
+import depositsAdminRoutes from "./modules/deposits/deposits.admin.routes.ts";
 import { errorMiddleware } from "./middleware/error.middleware.ts";
 
 app.use(express.json());
@@ -20,6 +21,7 @@ app.get("/health", (req: Request, res: Response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/deposits", depositsRoutes);
+app.use("/api/admin/deposits", depositsAdminRoutes);
 
 // Error handler must be registered last — after all routes.
 app.use(errorMiddleware);

@@ -4,7 +4,11 @@ import * as depositsService from "./deposits.service.ts";
 import type {
   DepositAddressQuery,
   CreateDepositInput,
+  ListDepositsQuery,
+  ApproveDepositInput,
+  RejectDepositInput,
 } from "./deposits.types.ts";
+
 import { AppError } from "../../lib/error.ts";
 
 export async function getDepositAddressHandler(
@@ -34,6 +38,54 @@ export async function createDepositHandler(
     const input = req.body as CreateDepositInput;
     const deposit = await depositsService.createDeposit(req.user.userId, input);
     res.status(201).json({ deposit });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listDepositsHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { status } = req.validatedQuery as ListDepositsQuery;
+    const deposits = await depositsService.listDeposits(status);
+    res.status(200).json({ deposits });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function approveDepositHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { reviewNote } = req.body as ApproveDepositInput;
+    const deposit = await depositsService.approveDeposit(
+      req.params.id as string,
+      reviewNote,
+    );
+    res.status(200).json({ deposit });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function rejectDepositHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { reviewNote } = req.body as RejectDepositInput;
+    const deposit = await depositsService.rejectDeposit(
+      req.params.id as string,
+      reviewNote,
+    );
+    res.status(200).json({ deposit });
   } catch (err) {
     next(err);
   }
