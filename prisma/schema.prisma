@@ -27,6 +27,7 @@ model User {
 
   role Role @default(USER) 
   deposits Deposit[]
+  balances Balance[]
   @@map("users")
 }
 
@@ -62,7 +63,54 @@ model Deposit {
   reviewNote    String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
+  transactions  Transaction[]
   @@unique([txHash, adminWalletId])
   @@map("deposits")
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  PAYOUT
+  REFERRAL_BONUS
+}
+
+model Transaction {
+  id        String          @id @default(cuid())
+  type      TransactionType
+  createdAt DateTime        @default(now())
+
+  entries   LedgerEntry[]
+
+  depositId String?         @unique
+  deposit   Deposit?        @relation(fields: [depositId], references: [id])
+
+  @@map("transactions")
+}
+
+model LedgerEntry {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+
+  account       String
+  coin          String
+  amount        Decimal
+
+  createdAt     DateTime    @default(now())
+
+  @@map("ledger_entries")
+}
+
+model Balance {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  coin      String
+  amount    Decimal  @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, coin])
+  @@map("balances")
 }

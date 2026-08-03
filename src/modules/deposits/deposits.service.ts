@@ -1,10 +1,14 @@
 import QRCode from "qrcode";
 import { prisma } from "../../lib/prisma.ts";
-
+import { recordDepositCredit } from "../ledger/ledger.service.ts";
 import type { CreateDepositInput, DEPOSIT_STATUSES } from "./deposits.types.ts";
 import { AppError } from "../../lib/error.ts";
 
 type DepositStatusValue = (typeof DEPOSIT_STATUSES)[number];
+
+type PrismaTransactionClient = Parameters<
+  Parameters<typeof prisma.$transaction>[0]
+>[0];
 
 async function getActiveWallet(coin: string) {
   const wallet = await prisma.adminWallet.findFirst({
@@ -71,13 +75,13 @@ export async function listDeposits(status?: DepositStatusValue) {
   });
 }
 
-async function reviewDeposit(
+async function getReviewableDeposit(
+  tx: PrismaTransactionClient,
   depositId: string,
-  newStatus: Extract<DepositStatusValue, "CONFIRMED" | "REJECTED">,
-  reviewNote?: string,
 ) {
-  const deposit = await prisma.deposit.findUnique({
+  const deposit = await tx.deposit.findUnique({
     where: { id: depositId },
+    include: { adminWallet: { select: { coin: true } } },
   });
 
   if (!deposit) {
@@ -91,20 +95,44 @@ async function reviewDeposit(
     );
   }
 
-  return prisma.deposit.update({
-    where: { id: depositId },
-    data: {
-      status: newStatus,
-      reviewedAt: new Date(),
-      reviewNote,
-    },
-  });
+  return deposit;
 }
 
 export async function approveDeposit(depositId: string, reviewNote?: string) {
-  return reviewDeposit(depositId, "CONFIRMED", reviewNote);
+  return prisma.$transaction(async (tx: PrismaTransactionClient) => {
+    const deposit = await getReviewableDeposit(tx, depositId);
+
+    const updated = await tx.deposit.update({
+      where: { id: depositId },
+      data: {
+        status: "CONFIRMED",
+        reviewedAt: new Date(),
+        reviewNote,
+      },
+    });
+
+    await recordDepositCredit(tx, {
+      depositId: deposit.id,
+      userId: deposit.userId,
+      coin: deposit.adminWallet.coin,
+      amount: deposit.amount,
+    });
+
+    return updated;
+  });
 }
 
 export async function rejectDeposit(depositId: string, reviewNote: string) {
-  return reviewDeposit(depositId, "REJECTED", reviewNote);
+  return prisma.$transaction(async (tx: PrismaTransactionClient) => {
+    await getReviewableDeposit(tx, depositId);
+
+    return tx.deposit.update({
+      where: { id: depositId },
+      data: {
+        status: "REJECTED",
+        reviewedAt: new Date(),
+        reviewNote,
+      },
+    });
+  });
 }
