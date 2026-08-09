@@ -1,9 +1,13 @@
 import { prisma } from "../../lib/prisma.ts";
 
-export async function listBalances(userId: string) {
-  return prisma.balance.findMany({
+export async function getBalance(userId: string) {
+  const balance = await prisma.balance.findUnique({
     where: { userId },
-    select: { coin: true, amount: true, updatedAt: true },
-    orderBy: { coin: "asc" },
+    select: { amount: true, updatedAt: true },
   });
+
+  return {
+    usd: balance ? balance.amount.toString() : "0",
+    updatedAt: balance?.updatedAt ?? null,
+  };
 }

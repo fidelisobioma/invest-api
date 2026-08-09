@@ -1,11 +1,12 @@
 import QRCode from "qrcode";
+import { Decimal } from "decimal.js";
 import { prisma } from "../../lib/prisma.ts";
-import { recordDepositCredit } from "../ledger/ledger.service.ts";
-import type { CreateDepositInput, DEPOSIT_STATUSES } from "./deposits.types.ts";
 import { AppError } from "../../lib/error.ts";
+import { recordDepositCredit } from "../ledger/ledger.service.ts";
+import { getUsdPrice } from "../prices/prices.service.ts";
+import type { CreateDepositInput, DEPOSIT_STATUSES } from "./deposits.types.ts";
 
 type DepositStatusValue = (typeof DEPOSIT_STATUSES)[number];
-
 type PrismaTransactionClient = Parameters<
   Parameters<typeof prisma.$transaction>[0]
 >[0];
@@ -99,23 +100,46 @@ async function getReviewableDeposit(
 }
 
 export async function approveDeposit(depositId: string, reviewNote?: string) {
+  const deposit = await prisma.deposit.findUnique({
+    where: { id: depositId },
+    include: { adminWallet: { select: { coin: true } } },
+  });
+
+  if (!deposit) {
+    throw new AppError("Deposit not found", 404);
+  }
+
+  if (deposit.status !== "PENDING") {
+    throw new AppError(
+      `This deposit has already been ${deposit.status.toLowerCase()} and cannot be reviewed again`,
+      409,
+    );
+  }
+
+  const coin = deposit.adminWallet.coin;
+  const coinAmount = new Decimal(deposit.amount.toString());
+  const price = await getUsdPrice(coin);
+  const usdValue = coinAmount.mul(price);
+
   return prisma.$transaction(async (tx: PrismaTransactionClient) => {
-    const deposit = await getReviewableDeposit(tx, depositId);
+    const current = await getReviewableDeposit(tx, depositId);
 
     const updated = await tx.deposit.update({
       where: { id: depositId },
       data: {
         status: "CONFIRMED",
+        usdValueAtConfirmation: usdValue.toString(),
         reviewedAt: new Date(),
         reviewNote,
       },
     });
 
     await recordDepositCredit(tx, {
-      depositId: deposit.id,
-      userId: deposit.userId,
-      coin: deposit.adminWallet.coin,
-      amount: deposit.amount,
+      depositId: current.id,
+      userId: current.userId,
+      coin,
+      coinAmount: coinAmount.toString(),
+      usdValue: usdValue.toString(),
     });
 
     return updated;

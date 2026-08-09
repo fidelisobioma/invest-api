@@ -76,6 +76,38 @@ async function main() {
     });
     console.log(`Admin wallet ready: ${result.coin} (${result.network})`);
   }
+
+  const plans = [
+    {
+      name: "Starter",
+      minAmountUsd: "50",
+      maxAmountUsd: "500",
+      roiPercent: "10",
+      durationDays: 7,
+    },
+    {
+      name: "Pro",
+      minAmountUsd: "500",
+      maxAmountUsd: "5000",
+      roiPercent: "20",
+      durationDays: 14,
+    },
+    {
+      name: "VIP",
+      minAmountUsd: "5000",
+      maxAmountUsd: "50000",
+      roiPercent: "35",
+      durationDays: 30,
+    },
+  ];
+  for (const plan of plans) {
+    const result = await prisma.plan.upsert({
+      where: { name: plan.name },
+      update: {},
+      create: plan,
+    });
+    console.log(`Plan ready: ${result.name}`);
+  }
 }
 
 main()
