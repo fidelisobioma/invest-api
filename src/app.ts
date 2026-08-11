@@ -17,6 +17,7 @@ import investmentsAdminRoutes from "./modules/investments/investments.admin.rout
 import withdrawalsRoutes from "./modules/withdrawals/withdrawals.routes.ts";
 import withdrawalsAdminRoutes from "./modules/withdrawals/withdrawals.admin.routes.ts";
 import referralsRoutes from "./modules/referrals/referrals.routes.ts";
+import usersRoutes from "./modules/users/users.routes.ts";
 import { errorMiddleware } from "./middleware/error.middleware.ts";
 
 app.use(express.json());
@@ -45,6 +46,8 @@ app.use("/api/admin/withdrawals", withdrawalsAdminRoutes);
 app.use("/api/transactions", transactionsRoutes);
 
 app.use("/api/referrals", referralsRoutes);
+
+app.use("/api/me", usersRoutes);
 
 // Error handler must be registered last — after all routes.
 app.use(errorMiddleware);
