@@ -14,6 +14,7 @@ async function main() {
       email: "mbamfidelisobioma@gmail.com",
       password: hashedPassword,
       name: "Fidelis",
+      referralCode: "TESTUSER1",
     },
   });
 
@@ -29,12 +30,12 @@ async function main() {
       password: adminPassword,
       name: "Vault Admin",
       role: "ADMIN",
+      referralCode: "TESTUSER2",
     },
   });
 
   console.log("Admin ready:", admin.email);
 
-  // --- Seed admin wallets (idempotent: upsert by coin+network) ---
   const adminWallets = [
     {
       coin: "BTC",

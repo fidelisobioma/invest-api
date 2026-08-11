@@ -264,3 +264,40 @@ export async function recordWithdrawalRejection(
 
   return transaction;
 }
+
+export async function recordReferralBonus(
+  tx: PrismaTransactionClient,
+  params: {
+    referralBonusId: string;
+    referrerId: string;
+    amountUsd: DecimalLike;
+  },
+) {
+  const { referralBonusId, referrerId, amountUsd } = params;
+
+  const transaction = await tx.transaction.create({
+    data: {
+      type: "REFERRAL_BONUS",
+      referralBonusId,
+      entries: {
+        create: [
+          {
+            account: "platform:usd_liability",
+            coin: "USD",
+            amount: `-${amountUsd}`,
+          },
+          {
+            account: `user:${referrerId}`,
+            coin: "USD",
+            amount: `${amountUsd}`,
+          },
+        ],
+      },
+    },
+    include: { entries: true },
+  });
+
+  await adjustBalance(tx, referrerId, amountUsd);
+
+  return transaction;
+}

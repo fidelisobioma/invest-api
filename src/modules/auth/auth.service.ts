@@ -3,27 +3,47 @@ import { prisma } from "../../lib/prisma.ts";
 import type { SignupInput, LoginInput } from "./auth.types.ts";
 import { AppError } from "../../lib/error.ts";
 import { signToken } from "../../lib/jwt.ts";
+import { generateUniqueReferralCode } from "../referrals/referrals.service.ts"; // add this import
 
-const SOUND_ROUNDS = 10;
+const SALT_ROUNDS = 10;
 
 export async function signup(input: SignupInput) {
-  // find email the incoming email in the database
   const existing = await prisma.user.findUnique({
     where: { email: input.email },
   });
 
-  //Check if email exist in the database
   if (existing) {
-    // Tell the user the email is already taken by another user
     throw new AppError("An account with this email already exists", 409);
   }
 
-  // Hash password
-  const hashPassword = await bcrypt.hash(input.password, SOUND_ROUNDS);
-  //   Register a valid user
+  let referredById: string | undefined;
+
+  if (input.referralCode) {
+    const referrer = await prisma.user.findUnique({
+      where: { referralCode: input.referralCode },
+      select: { id: true },
+    });
+
+    if (!referrer) {
+      throw new AppError("Invalid referral code", 400);
+    }
+
+    referredById = referrer.id;
+  }
+
+  const hashedPassword = await bcrypt.hash(input.password, SALT_ROUNDS);
+  const referralCode = await generateUniqueReferralCode();
+
   const user = await prisma.user.create({
-    data: { email: input.email, password: hashPassword, name: input.name },
+    data: {
+      email: input.email,
+      password: hashedPassword,
+      name: input.name,
+      referralCode,
+      referredById,
+    },
   });
+
   const { password: _password, ...safeUser } = user;
   return safeUser;
 }

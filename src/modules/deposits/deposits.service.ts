@@ -5,6 +5,7 @@ import { AppError } from "../../lib/error.ts";
 import { recordDepositCredit } from "../ledger/ledger.service.ts";
 import { getUsdPrice } from "../prices/prices.service.ts";
 import type { CreateDepositInput, DEPOSIT_STATUSES } from "./deposits.types.ts";
+import { maybeAwardReferralBonus } from "../referrals/referrals.service.ts";
 
 type DepositStatusValue = (typeof DEPOSIT_STATUSES)[number];
 type PrismaTransactionClient = Parameters<
@@ -142,6 +143,10 @@ export async function approveDeposit(depositId: string, reviewNote?: string) {
       usdValue: usdValue.toString(),
     });
 
+    await maybeAwardReferralBonus(tx, {
+      depositId: current.id,
+      userId: current.userId,
+    });
     return updated;
   });
 }

@@ -20,6 +20,13 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  referralCode String  @unique
+  referredById String?
+  referredBy   User?   @relation("Referrals", fields: [referredById], references: [id])
+  referrals    User[]  @relation("Referrals")
+
+  referralBonusesGiven    ReferralBonus[] @relation("ReferralBonusesGiven")
+  referralBonusReceived   ReferralBonus?  @relation("ReferralBonusReceived")
 
   deposits    Deposit[]
   withdrawals Withdrawal[]
@@ -66,6 +73,7 @@ model Deposit {
   updatedAt     DateTime      @updatedAt
 
   transaction   Transaction?
+  referralBonus ReferralBonus?
 
   @@unique([txHash, adminWalletId])
   @@map("deposits")
@@ -120,6 +128,9 @@ model Transaction {
 
   investmentId String?
   investment   Investment?  @relation(fields: [investmentId], references: [id])
+
+  referralBonusId String?    @unique
+  referralBonus   ReferralBonus? @relation(fields: [referralBonusId], references: [id])
 
   @@map("transactions")
 }
@@ -186,4 +197,20 @@ model Investment {
   transactions Transaction[]
 
   @@map("investments")
+}
+
+model ReferralBonus {
+  id         String   @id @default(cuid())
+  referrerId String
+  referrer   User     @relation("ReferralBonusesGiven", fields: [referrerId], references: [id])
+  refereeId  String   @unique
+  referee    User     @relation("ReferralBonusReceived", fields: [refereeId], references: [id])
+  triggeringDepositId String  @unique
+  triggeringDeposit   Deposit @relation(fields: [triggeringDepositId], references: [id])
+  amountUsd  Decimal
+  createdAt  DateTime @default(now())
+
+  transaction Transaction?
+
+  @@map("referral_bonuses")
 }
