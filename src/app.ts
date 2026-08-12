@@ -9,6 +9,9 @@ import depositsRoutes from "./modules/deposits/deposits.routes.ts";
 import depositsAdminRoutes from "./modules/deposits/deposits.admin.routes.ts";
 import balancesRoutes from "./modules/ledger/balances.routes.ts";
 import transactionsRoutes from "./modules/transactions/transactions.routes.ts";
+import kycRoutes from "./modules/kyc/kyc.routes.ts";
+import kycAdminRoutes from "./modules/kyc/kyc.admin.routes.ts";
+
 import {
   plansRouter,
   investmentsRouter,
@@ -48,6 +51,8 @@ app.use("/api/transactions", transactionsRoutes);
 app.use("/api/referrals", referralsRoutes);
 
 app.use("/api/me", usersRoutes);
+app.use("/api/kyc", kycRoutes);
+app.use("/api/admin/kyc", kycAdminRoutes);
 
 // Error handler must be registered last — after all routes.
 app.use(errorMiddleware);

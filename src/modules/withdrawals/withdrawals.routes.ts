@@ -15,6 +15,7 @@ router.post(
   validate(createWithdrawalSchema),
   createWithdrawalHandler,
 );
+
 router.get("/", requireAuth, listMyWithdrawalsHandler);
 
 export default router;

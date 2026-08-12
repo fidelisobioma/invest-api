@@ -27,12 +27,15 @@ model User {
 
   referralBonusesGiven    ReferralBonus[] @relation("ReferralBonusesGiven")
   referralBonusReceived   ReferralBonus?  @relation("ReferralBonusReceived")
+  
 
   deposits    Deposit[]
   withdrawals Withdrawal[]
   investments Investment[]
   balance     Balance?
   passwordResetTokens PasswordResetToken[]
+  kycStatus       KycStatus       @default(NOT_SUBMITTED)
+  kycSubmissions  KycSubmission[]
 
   @@map("users")
 }
@@ -226,4 +229,28 @@ model PasswordResetToken {
   createdAt DateTime  @default(now())
 
   @@map("password_reset_tokens")
+}
+
+enum KycStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model KycSubmission {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  legalName   String
+  dateOfBirth DateTime
+  country     String
+  idNumber    String
+  status      KycStatus @default(PENDING)
+  reviewedAt  DateTime?
+  reviewNote  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("kyc_submissions")
 }

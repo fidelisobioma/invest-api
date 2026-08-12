@@ -16,12 +16,15 @@ import {
 const router = Router();
 
 router.post("/signup", validate(signupSchema), signupHandler);
+
 router.post("/login", validate(loginSchema), loginHandler);
+
 router.post(
   "/forgot-password",
   validate(forgotPasswordSchema),
   forgotPasswordHandler,
 );
+
 router.post(
   "/reset-password",
   validate(resetPasswordSchema),

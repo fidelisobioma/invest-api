@@ -21,6 +21,18 @@ export async function createWithdrawal(
   userId: string,
   input: CreateWithdrawalInput,
 ) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { kycStatus: true },
+  });
+
+  if (!user || user.kycStatus !== "APPROVED") {
+    throw new AppError(
+      "Identity verification is required before you can withdraw funds. Please submit your KYC details.",
+      403,
+    );
+  }
+
   const amountUsd = new Decimal(input.amountUsd);
 
   return prisma.$transaction(async (tx: PrismaTransactionClient) => {
