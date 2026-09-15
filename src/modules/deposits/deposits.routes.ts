@@ -11,6 +11,7 @@ import {
 import {
   getDepositAddressHandler,
   createDepositHandler,
+  listMyDepositsHandler,
 } from "./deposits.controller.ts";
 
 const router = Router();
@@ -21,6 +22,8 @@ router.get(
   validateQuery(depositAddressQuerySchema),
   getDepositAddressHandler,
 );
+
+router.get("/", requireAuth, listMyDepositsHandler);
 
 router.post(
   "/",

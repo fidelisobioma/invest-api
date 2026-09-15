@@ -77,6 +77,16 @@ export async function listDeposits(status?: DepositStatusValue) {
   });
 }
 
+export async function listUserDeposits(userId: string) {
+  return prisma.deposit.findMany({
+    where: { userId },
+    include: {
+      adminWallet: { select: { coin: true, network: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 async function getReviewableDeposit(
   tx: PrismaTransactionClient,
   depositId: string,

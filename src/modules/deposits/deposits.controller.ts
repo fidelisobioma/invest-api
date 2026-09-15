@@ -57,6 +57,22 @@ export async function listDepositsHandler(
   }
 }
 
+export async function listMyDepositsHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    if (!req.user) {
+      throw new AppError("Not authenticated", 401);
+    }
+    const deposits = await depositsService.listUserDeposits(req.user.userId);
+    res.status(200).json({ deposits });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function approveDepositHandler(
   req: Request,
   res: Response,
