@@ -3,15 +3,28 @@ import express, {
   type Request,
   type Response,
 } from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 const app: Application = express();
+const allowedOrigins = (process.env.FRONTEND_URL ?? "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
+app.use(express.json());
+app.use(cookieParser());
 import authRoutes from "./modules/auth/auth.routes.ts";
 import depositsRoutes from "./modules/deposits/deposits.routes.ts";
 import depositsAdminRoutes from "./modules/deposits/deposits.admin.routes.ts";
 import balancesRoutes from "./modules/ledger/balances.routes.ts";
 import transactionsRoutes from "./modules/transactions/transactions.routes.ts";
+import walletsAdminRoutes from "./modules/wallets/wallets.admin.routes.ts";
 import kycRoutes from "./modules/kyc/kyc.routes.ts";
 import kycAdminRoutes from "./modules/kyc/kyc.admin.routes.ts";
-
 import {
   plansRouter,
   investmentsRouter,
@@ -53,7 +66,7 @@ app.use("/api/referrals", referralsRoutes);
 app.use("/api/me", usersRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/admin/kyc", kycAdminRoutes);
-
+app.use("/api/admin/wallets", walletsAdminRoutes);
 // Error handler must be registered last — after all routes.
 app.use(errorMiddleware);
 export default app;
