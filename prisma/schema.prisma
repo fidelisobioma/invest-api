@@ -104,8 +104,7 @@ model Withdrawal {
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
-  transaction Transaction?
-
+  transactions Transaction[]
   @@map("withdrawals")
 }
 
@@ -127,7 +126,9 @@ model Transaction {
   depositId String?         @unique
   deposit   Deposit?        @relation(fields: [depositId], references: [id])
 
-  withdrawalId String?      @unique
+
+
+  withdrawalId String?
   withdrawal   Withdrawal?  @relation(fields: [withdrawalId], references: [id])
 
   investmentId String?
