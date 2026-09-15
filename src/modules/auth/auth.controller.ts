@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import * as authService from "./auth.service.ts";
+import { AUTH_COOKIE_NAME, authCookieOptions } from "../../lib/cookies.ts";
 
 export async function signupHandler(
   req: Request,
@@ -20,8 +21,22 @@ export async function loginHandler(
   next: NextFunction,
 ) {
   try {
-    const result = await authService.login(req.body);
-    res.status(200).json(result);
+    const { user, token } = await authService.login(req.body);
+    res.cookie(AUTH_COOKIE_NAME, token, authCookieOptions);
+    res.status(200).json({ user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function logoutHandler(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    res.clearCookie(AUTH_COOKIE_NAME, authCookieOptions);
+    res.status(200).json({ message: "Logged out." });
   } catch (err) {
     next(err);
   }

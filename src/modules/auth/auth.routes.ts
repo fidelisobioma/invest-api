@@ -2,9 +2,11 @@ import { Router } from "express";
 import {
   signupHandler,
   loginHandler,
+  logoutHandler,
   forgotPasswordHandler,
   resetPasswordHandler,
-} from "./auth.controller.ts";
+} from "./auth.controller.ts"; // update this import line
+
 import { validate } from "../../middleware/validate.middleware.ts";
 import {
   signupSchema,
@@ -30,5 +32,7 @@ router.post(
   validate(resetPasswordSchema),
   resetPasswordHandler,
 );
+
+router.post("/logout", logoutHandler);
 
 export default router;
