@@ -27,7 +27,7 @@ export async function submitKyc(userId: string, input: SubmitKycInput) {
       data: {
         userId,
         legalName: input.legalName,
-        dateOfBirth: input.dateOfBirth,
+        dateOfBirth: new Date(input.dateOfBirth),
         country: input.country,
         idNumber: input.idNumber,
       },
