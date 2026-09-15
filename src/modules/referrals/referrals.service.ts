@@ -98,6 +98,10 @@ export async function getReferralSummary(userId: string) {
 
   return {
     referralCode: user.referralCode,
+    // The flat per-referral bonus amount — exposed so the frontend can
+    // show it in marketing copy ("earn $X per referral") without
+    // hardcoding a number that could drift from the real backend value.
+    bonusAmountUsd: REFERRAL_BONUS_USD,
     totalEarnedUsd,
     referrals: user.referrals.map((r) => ({
       id: r.id,
@@ -105,6 +109,9 @@ export async function getReferralSummary(userId: string) {
       name: r.name,
       joinedAt: r.createdAt,
       bonusAwarded: r.referralBonusReceived !== null,
+      // Was being fetched and silently discarded before — now actually
+      // returned, so the frontend can show "+$X" per referral row.
+      bonusAmountUsd: r.referralBonusReceived?.amountUsd.toString() ?? null,
     })),
   };
 }
